@@ -17,22 +17,29 @@ import { Land } from './layers/land';
 import { Tccgug } from './layers/tccgug';
 
 // 小工具
-import Editor from "@arcgis/core/widgets/Editor" // 編輯器
-import Sketch from "@arcgis/core/widgets/Sketch" // 參考圖層
-import Expand from "@arcgis/core/widgets/Expand" // 參考圖層
-import Fullscreen from "@arcgis/core/widgets/Fullscreen" // 全螢幕
+import { WidgetManager } from './WidgetManager';
+import Expand from "@arcgis/core/widgets/Expand" 
 
-const graphicsLayer = new GraphicsLayer()
+// 1. 加入底圖
 const map = new Map({
   basemap: "topo-vector",
-  layers: [graphicsLayer]
+  // layers: [graphicsLayer]
 })
 
+// 2. 加入地籍底圖
+map.add(Land.layer);
+
+// 3. 加入需編輯圖層
 let tccgug = new Tccgug("https://mcgbm.taichung.gov.tw/arcgis/rest/services/cmd_tccgugMap_rm/FeatureServer/0")
 map.add(tccgug.layer);
 
-map.add(Land.layer);
+// 4. 加入參考圖層
+const referLayer = new GraphicsLayer({
+  title: "referLayer"
+})
+map.add(referLayer)
 
+// 5. 顯示畫面
 const view = new MapView({
   container: "viewDiv",
   map: map,
@@ -40,28 +47,15 @@ const view = new MapView({
   center: [120.57889244754534, 24.159856487625685]
 });
 
+// 小工具
+let widgetManager = new WidgetManager(view)
+
+
 view.when(() => {
   console.log("Map is loaded");
 
-  // fullscreen widget
-  const fullscreen = new Fullscreen({
-    view: view
-  });
-  view.ui.add(fullscreen, "top-left");
-
-  // sketch widget
-  const sketch = new Sketch({
-    view,
-    layer: graphicsLayer
-  });
-  view.ui.add(sketch, "top-right")
-
-  // Editor widget
-  const editor = new Editor({
-    view: view
-  });
-  // Add widget to the view
-  view.ui.add(editor, "top-right");
+  // 載入小工具
+  widgetManager.setWidgets(view)
 
   view.ui.add(
     new Expand({
